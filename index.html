@@ -1,120 +1,30 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mercado Local - Mi Pueblo</title>
+
+    <html>
+    <head>
+    <title>Predicciones: catar vs suiza</title>
     <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
-        body { background: #f4f6f9; color: #333; }
-        header { background: #fff000; padding: 15px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; font-size: 24px; }
-        
-        .banner-publicidad { background: #333; color: #fff; text-align: center; padding: 10px; font-size: 14px; }
-        .banner-publicidad a { color: #fff000; text-decoration: none; font-weight: bold; }
-
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .grid-productos { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        
-        .producto-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: 0.2s; display: flex; flex-direction: column; }
-        .producto-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        
-        .producto-img { width: 100%; height: 200px; background: #ddd; overflow: hidden; }
-        .producto-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        
-        .producto-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .precio { font-size: 22px; font-weight: bold; color: #333; margin-bottom: 5px; }
-        .titulo { font-size: 16px; color: #666; margin-bottom: 15px; height: 42px; overflow: hidden; }
-        
-        .btn-contacto { display: block; text-align: center; background: #25D366; color: white; border: none; width: 100%; padding: 10px; border-radius: 5px; font-weight: bold; font-size: 14px; cursor: pointer; text-decoration: none; }
-        .btn-contacto:hover { background: #1ebd58; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #5c061c; color: #333; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 15px; max-width: 850px; margin: auto; box-shadow: 0px 4px 15px rgba(0,0,0,0.3); }
+        h2 { color: #5c061c; text-align: center; border-bottom: 3px solid #8a1538; padding-bottom: 10px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 25px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #8a1538; color: white; }
+        tr:nth-child(even) { background-color: #fcf8f9; }
+        .lambda-box { display: flex; justify-content: space-around; margin: 20px 0; background: #f5f5f5; padding: 15px; border-radius: 8px; }
+        .lambda-item { font-size: 16px; }
     </style>
-</head>
-<body>
-
-    <header>
-        <h1>🛒 Mercado de Campo Largo</h1>
-        <p>Compra directo a tus vecinos sin comisiones</p>
-    </header>
-
-    <div class="banner-publicidad">
-        📢 Espacio disponible para tu negocio. ¡Contáctanos para anunciar aquí!
-    </div>
-
+    </head>
+    <body>
     <div class="container">
-        <div class="grid-productos">
-
-            <!-- PRODUCTO 1 -->
-            <div class="producto-card">
-                <div class="producto-img">
-                   <img src="fernetcoca.jpg" style="width: 200px !important; height: auto;">
-                </div>
-                <div class="producto-info">
-                    <div>
-                        <div class="precio">$19.000</div>
-                        <div class="titulo">Sacramentos -  24/7</div>
-                    </div>
-                    <!-- AQUÍ CAMBIAS EL NÚMERO Y NOMBRE DE ESTE VECINO -->
-                    <button class="btn-contacto" onclick="abrirChat('5493644695132', 'Fernet')">💬 Contactar por WhatsApp</button>
-                </div>
-            </div>
-
-            <!-- PRODUCTO 2 -->
-            <div class="producto-card">
-                <div class="producto-img">
-                    <img src="foto2.jpg" alt="Huevos">
-                </div>
-                <div class="producto-info">
-                    <div>
-                        <div class="precio">$4.000</div>
-                        <div class="titulo">Maples de Huevos de Campo frescos</div>
-                    </div>
-                    <!-- CAMBIAS EL NÚMERO PARA EL VECINO 2 -->
-                    <button class="btn-contacto" onclick="abrirChat('5493644111111', 'Maples de Huevos')">💬 Contactar por WhatsApp</button>
-                </div>
-            </div>
-
-            <!-- PRODUCTO 3 -->
-            <div class="producto-card">
-                <div class="producto-img">
-                    <img src="foto3.jpg" alt="Hamburguesas">
-                </div>
-                <div class="producto-info">
-                    <div>
-                        <div class="precio">$5.500</div>
-                        <div class="titulo">Hamburguesas Completas con papas</div>
-                    </div>
-                    <!-- CAMBIAS EL NÚMERO PARA EL VECINO 3 -->
-                    <button class="btn-contacto" onclick="abrirChat('5493644222222', 'Hamburguesas Completas')">💬 Contactar por WhatsApp</button>
-                </div>
-            </div>
-
-            <!-- PRODUCTO 4 -->
-            <div class="producto-card">
-                <div class="producto-img">
-                    <img src="foto4.jpg" alt="Leña">
-                </div>
-                <div class="producto-info">
-                    <div>
-                        <div class="precio">$12.000</div>
-                        <div class="titulo">Leña seca por tonelada - Carlos</div>
-                    </div>
-                    <!-- CAMBIAS EL NÚMERO PARA CARLOS -->
-                    <button class="btn-contacto" onclick="abrirChat('5493644333333', 'Leña Seca de Carlos')">💬 Contactar por WhatsApp</button>
-                </div>
-            </div>
-
+        <h2>Simulador Estadístico - Copa del Mundo</h2>
+        <div class="lambda-box">
+            <div class="lambda-item"><b>Goles Esperados catar:</b> 0.69</div>
+            <div class="lambda-item"><b>Goles Esperados suiza:</b> 1.83</div>
         </div>
-    </div>
-
-    <script>
-        // Esta función ahora recibe el número y el producto de cada botón por separado
-        function abrirChat(numeroVecino, nombreProducto) {
-            const mensaje = "Hola, vi tu producto '" + nombreProducto + "' en el Mercado de Campo Largo";
-            const enlaceCelular = "whatsapp://send?phone=" + numeroVecino + "&text=" + encodeURIComponent(mensaje);
-            window.location.href = enlaceCelular;
-        }
-    </script>
-
-</body>
-</html>
+        <h3>Matriz de Probabilidad de Marcadores (%)</h3>
+        <table>
+            <tr>
+                <th>catar \ suiza</th>
+                <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
+            </tr>
+    <tr><td><b>0</b></td><td>8.1%</td><td>14.8%</td><td>13.5%</td><td>8.2%</td><td>3.8%</td><td>1.4%</td></tr><tr><td><b>1</b></td><td>5.5%</td><td>10.1%</td><td>9.3%</td><td>5.7%</td><td>2.6%</td><td>0.9%</td></tr><tr><td><b>2</b></td><td>1.9%</td><td>3.5%</td><td>3.2%</td><td>1.9%</td><td>0.9%</td><td>0.3%</td></tr><tr><td><b>3</b></td><td>0.4%</td><td>0.8%</td><td>0.7%</td><td>0.4%</td><td>0.2%</td><td>0.1%</td></tr><tr><td><b>4</b></td><td>0.1%</td><td>0.1%</td><td>0.1%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td></tr><tr><td><b>5</b></td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr></table></div></body></html>
