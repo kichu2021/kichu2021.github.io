@@ -84,9 +84,9 @@ with col_input3:
     prom_liga = st.number_input("Media general de la Liga", min_value=1.0, value=9.5, step=0.1)
     n_simulaciones = st.selectbox("Número de Simulaciones Montecarlo", [5000, 10000, 20000], index=1)
 
-# Cálculo matemático Lambda Base
-lambda_local_base = (cf_local / prom_liga) * (cc_visita / prom_liga) * (prom_liga / 2)
-lambda_visita_base = (cf_visita / prom_liga) * (cc_local / prom_liga) * (prom_liga / 2)
+# Cálculo matemático Lambda Base CORREGIDO (Escala Real de Partido)
+lambda_local_base = (cf_local * cc_visita) / prom_liga
+lambda_visita_base = (cf_visita * cc_local) / prom_liga
 
 # --- PESTAÑAS DE ANÁLISIS ---
 tab1, tab2 = st.tabs(["📊 Simulación Pre-Partido", "⏱️ Proyección En Vivo (Ajustada por Marcador)"])
