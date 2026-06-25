@@ -84,9 +84,16 @@ with col_input3:
     prom_liga = st.number_input("Media general de la Liga", min_value=1.0, value=9.5, step=0.1)
     n_simulaciones = st.selectbox("Número de Simulaciones Montecarlo", [5000, 10000, 20000], index=1)
 
-# Cálculo matemático Lambda Base CORREGIDO (Escala Real de Partido)
-lambda_local_base = (cf_local * cc_visita) / prom_liga
-lambda_visita_base = (cf_visita * cc_local) / prom_liga
+# --- CÁLCULO DE FUERZAS DE ATAQUE Y DEFENSA ---
+prom_individual = prom_liga / 2
+
+fuerza_atk_local = cf_local / prom_individual
+fuerza_atk_visita = cf_visita / prom_individual
+fuerza_def_local = cc_local / prom_individual
+fuerza_def_visita = cc_visita / prom_individual
+
+lambda_local_base = fuerza_atk_local * fuerza_def_visita * prom_individual
+lambda_visita_base = fuerza_atk_visita * fuerza_def_local * prom_individual
 
 # --- PESTAÑAS DE ANÁLISIS ---
 tab1, tab2 = st.tabs(["📊 Simulación Pre-Partido", "⏱️ Proyección En Vivo (Ajustada por Marcador)"])
@@ -111,7 +118,6 @@ def graficar_probabilidades(resultados_simulados):
         valores_lineas.append(f"Más de {linea}")
         porcentajes.append(round(prob, 1))
     
-    # Gráfico 1: Barras de Probabilidad de Mercados
     fig_barras = px.bar(
         x=valores_lineas, 
         y=porcentajes, 
@@ -124,7 +130,6 @@ def graficar_probabilidades(resultados_simulados):
     fig_barras.update_traces(textposition='outside')
     fig_barras.update_layout(yaxis_range=[0, 110], coloraxis_showscale=False)
     
-    # Gráfico 2: Histograma de Distribución Exacta
     valores_unicos, conteos = np.unique(resultados_simulados, return_counts=True)
     prob_exactas = (conteos / len(resultados_simulados)) * 100
     
@@ -141,7 +146,6 @@ def graficar_probabilidades(resultados_simulados):
         yaxis=dict(title="Probabilidad (%)", range=[0, max(prob_exactas) * 1.2])
     )
     
-    # Desplegar gráficos en columnas autónomas
     col_g1, col_g2 = st.columns(2)
     with col_g1:
         st.plotly_chart(fig_barras, use_container_width=True)
@@ -151,7 +155,7 @@ def graficar_probabilidades(resultados_simulados):
 with tab1:
     st.subheader("Análisis Probabilístico Pre-Partido")
     lambda_total_pre = lambda_local_base + lambda_visita_base
-    st.metric("Expectativa Inicial del Partido (Lambda)", f"{lambda_total_pre:.2f}")
+    st.metric("Expectativa Inicial del Partido (Lambda Total)", f"{lambda_total_pre:.2f}")
     
     if st.button("Ejecutar Simulador Pre-Partido"):
         with st.spinner("Corriendo algoritmos de Montecarlo..."):
@@ -166,7 +170,7 @@ with tab1:
             
             graficar_probabilidades(resultados_pre)
 
-# PESTAÑA 2: EN VIVO CON LÓGICA DE GOLES
+# PESTAÑA 2: EN VIVO CON LÓGICA DE GOLES Y FUERZAS DINÁMICAS
 with tab2:
     st.subheader("Módulo de Proyección en Tiempo Real (Efecto Marcador)")
     
@@ -193,40 +197,41 @@ with tab2:
             minuto_actual = st.number_input("Minuto actual del encuentro", min_value=1, max_value=90, value=45)
 
     if st.button("Ejecutar Simulador En Vivo"):
-        with st.spinner("Calculando impacto del marcador y proyectando tramo final..."):
+        with st.spinner("Calculando impacto del marcador mediante fuerzas dinámicas..."):
             minutos_restantes = max(90 - minuto_actual, 0)
             
-            # --- LÓGICA MATEMÁTICA: INFLUENCIA DE GOLES EN CORNERS ---
-            factor_local = 1.0
-            factor_visita = 1.0
+            # --- LÓGICA MATEMÁTICA: INFLUENCIA DE GOLES EN LA FUERZA DE ATAQUE ---
+            modificador_atk_local = 1.0
+            modificador_atk_visita = 1.0
             diff_goles = goles_local - goles_visita
             
-            if diff_goles < 0: # Local va perdiendo
-                factor_local += abs(diff_goles) * 0.18 
-                factor_visita -= abs(diff_goles) * 0.08 
-            elif diff_goles > 0: # Visita va perdiendo
-                factor_visita += diff_goles * 0.15
-                factor_local -= diff_goles * 0.05
-                
-            factor_local = max(factor_local, 0.6)
-            factor_visita = max(factor_visita, 0.6)
+            if diff_goles < 0: # Local va perdiendo: potencia su ataque
+                modificador_atk_local += abs(diff_goles) * 0.18 
+            elif diff_goles > 0: # Visita va perdiendo: potencia su ataque
+                modificador_atk_visita += diff_goles * 0.15
+
+            # Re-cálculo de Lambdas dinámicos cruzando fuerzas modificadas
+            fuerza_atk_local_viva = fuerza_atk_local * modificador_atk_local
+            fuerza_atk_visita_viva = fuerza_atk_visita * modificador_atk_visita
             
-            # Re-cálculo de Lambdas Ajustados por Escenario de Partido
-            lambda_local_ajustado = lambda_local_base * factor_local
-            lambda_visita_ajustado = lambda_visita_base * factor_visita
+            lambda_local_ajustado = fuerza_atk_local_viva * fuerza_def_visita * prom_individual
+            lambda_visita_ajustado = fuerza_atk_visita_viva * fuerza_def_local * prom_individual
             lambda_total_vivo = lambda_local_ajustado + lambda_visita_ajustado
             
-            # Simulación con la nueva tasa de corners modificada por los goles
+            # Simulación Montecarlo con tasa adaptada
+            resultados_vivo = simular_montecarlo(corners_1t_input, minutes_restantes=minutos_restantes if 'minutos_restantes' in locals() else 45, lambda_total=lambda_total_vivo, n_sim=n_simulaciones)
+            
+            # Corregir llamada interna por comodidad en asignación compacta de parámetros
             resultados_vivo = simular_montecarlo(corners_1t_input, minutos_restantes, lambda_total_vivo, n_simulaciones)
             promedio_proyectado = np.mean(resultados_vivo)
             
             # Cartas de Métricas Principales
             st.subheader("🎯 Resultados de la Proyección en Vivo")
-            st.caption(f"💡 **Ajuste de flujo táctico aplicado:** Multiplicador Local: **{factor_local:.2f}x** | Multiplicador Visita: **{factor_visita:.2f}x**")
+            st.caption(f"💡 **Fuerzas de Ataque Modificadas:** Local: **{fuerza_atk_local_viva:.2f}** | Visita: **{fuerza_atk_visita_viva:.2f}**")
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Corners Reales Registrados", f"{corners_1t_input}")
-            c2.metric("Promedio Esperado (2T / Restante)", f"{(promedio_proyectado - corners_1t_input):.2f}")
+            c2.metric("Promedio Esperado (Restante)", f"{(promedio_proyectado - corners_1t_input):.2f}")
             c3.metric("Total Final Proyectado", f"{promedio_proyectado:.2f}")
             
             graficar_probabilidades(resultados_vivo)
