@@ -10,62 +10,82 @@ except KeyError:
     st.error("⚠️ Falta configurar la API Key en los Secrets de Streamlit.")
     st.stop()
 
-# Probamos con la URL estándar
-BASE_URL = "https://api-sports.io"
-headers = {
-    'x-apisports-key': API_KEY
-}
+# LIMPIEZA AUTOMÁTICA POR SI HAY ESPACIOS INVISIBLES
+API_KEY = str(API_KEY).strip()
 
 st.title("⚽ Predictor de Corners Automatizado")
 st.write("Datos en tiempo real integrados de forma segura.")
 
+# SISTEMA INTELIGENTE DE AUTO-DETECCIÓN DE SERVIDOR
 @st.cache_data(ttl=60)
 def get_live_fixtures():
-    url = f"{BASE_URL}/fixtures?live=all"
+    # Intento 1: Servidor Directo de API-Sports
+    url_directa = "https://api-sports.io"
+    headers_directa = {'x-apisports-key': API_KEY}
+    
+    # Intento 2: Servidor Alternativo por RapidAPI
+    url_rapid = "https://rapidapi.com"
+    headers_rapid = {
+        'x-rapidapi-key': API_KEY,
+        'x-rapidapi-host': "://rapidapi.com"
+    }
+    
+    # Ejecutar Intento 1
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url_directa, headers=headers_directa)
+        if response.status_code == 200 and not response.json().get("errors"):
+            st.success("✅ Conectado exitosamente al servidor Directo")
+            return procesar_json_partidos(response.json()), "directo"
+    except:
+        pass
         
-        # Diagnóstico en vivo si el servidor no responde un código 200 (Éxito)
-        if response.status_code != 200:
-            st.error(f" Error de conexión con el servidor. Código HTTP: {response.status_code}")
-            return {}
-            
-        data = response.json()
-        
-        # Verificar si la API nos devolvió un mensaje de error interno (ej. Key inválida)
-        if "errors" in data and data["errors"]:
-            st.error(f"🚨 Error de la API de Fútbol: {data['errors']}")
-            return {}
-            
-        matches = {}
-        if "response" in data:
-            for match in data["response"]:
-                fixture_id = match["fixture"]["id"]
-                home_team = match["teams"]["home"]["name"]
-                away_team = match["teams"]["away"]["name"]
-                status = match["fixture"]["status"]["short"]
-                elapsed = match["fixture"]["status"]["elapsed"]
-                
-                label = f"{home_team} vs {away_team} ({status} - Min {elapsed}')"
-                matches[label] = {
-                    "id": fixture_id, "home": home_team, "away": away_team, 
-                    "status": status, "elapsed": elapsed
-                }
-        return matches
+    # Si falla el 1, Ejecutar Intento 2 (RapidAPI)
+    try:
+        response = requests.get(url_rapid, headers=headers_rapid)
+        if response.status_code == 200 and not response.json().get("errors"):
+            st.success("✅ Conectado exitosamente al servidor RapidAPI")
+            return procesar_json_partidos(response.json()), "rapidapi"
+        elif response.status_code == 403:
+            st.error("🚨 Error 403: Tu API Key no tiene un plan activo o es inválida en ambos servidores.")
     except Exception as e:
-        st.error(f"❌ Error al procesar los datos: {e}")
-        return {}
+        st.error(f"❌ Error crítico de red: {e}")
+        
+    return {}, "error"
 
-live_matches = get_live_fixtures()
+def procesar_json_partidos(data):
+    matches = {}
+    if "response" in data:
+        for match in data["response"]:
+            fixture_id = match["fixture"]["id"]
+            home_team = match["teams"]["home"]["name"]
+            away_team = match["teams"]["away"]["name"]
+            status = match["fixture"]["status"]["short"]
+            elapsed = match["fixture"]["status"]["elapsed"]
+            
+            label = f"{home_team} vs {away_team} ({status} - Min {elapsed}')"
+            matches[label] = {
+                "id": fixture_id, "home": home_team, "away": away_team, 
+                "status": status, "elapsed": elapsed
+            }
+    return matches
+
+# Llamada inicial
+live_matches, tipo_servidor = get_live_fixtures()
 
 if not live_matches:
-    st.warning("No se pudieron cargar partidos en vivo en este momento. Revisa los mensajes de error superiores.")
+    st.warning("No hay partidos en vivo disponibles usando esta credencial.")
     selected_match_label = None
 else:
     selected_match_label = st.sidebar.selectbox("Selecciona un partido en vivo:", list(live_matches.keys()))
 
-def get_match_stats(fixture_id):
-    url = f"{BASE_URL}/fixtures/statistics?fixture={fixture_id}"
+def get_match_stats(fixture_id, servidor):
+    if servidor == "directo":
+        url = f"https://api-sports.io{fixture_id}"
+        headers = {'x-apisports-key': API_KEY}
+    else:
+        url = f"https://://rapidapi.com/v3/fixtures/statistics?fixture={fixture_id}"
+        headers = {'x-rapidapi-key': API_KEY, 'x-rapidapi-host': "://rapidapi.com"}
+        
     try:
         response = requests.get(url, headers=headers).json()
         corners_home, corners_away = 0, 0
@@ -87,6 +107,7 @@ def get_match_stats(fixture_id):
     except:
         return 0, 0
 
+# --- PESTAÑAS ---
 tab1, tab2 = st.tabs(["📊 Simulación Pre-Partido", "⏱️ Proyección En Vivo (2T)"])
 
 with tab1:
@@ -109,7 +130,7 @@ with tab2:
     st.header("Módulo de Tiempo Real")
     if selected_match_label and live_matches:
         match_data = live_matches[selected_match_label]
-        c_home, c_away = get_match_stats(match_data["id"])
+        c_home, c_away = get_match_stats(match_data["id"], tipo_servidor)
         corners_reales_actuales = c_home + c_away
         st.info(f"🏟️ **Datos API:** {match_data['home']} ({c_home}) - ({c_away}) {match_data['away']}")
         corners_1t_input = st.number_input("Corners actuales detectados", value=int(corners_reales_actuales))
