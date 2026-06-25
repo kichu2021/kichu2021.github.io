@@ -84,13 +84,20 @@ with col_input3:
     prom_liga = st.number_input("Media general de la Liga", min_value=1.0, value=9.5, step=0.1)
     n_simulaciones = st.selectbox("Número de Simulaciones Montecarlo", [5000, 10000, 20000], index=1)
 
-# --- CÁLCULO DE FUERZAS DE ATAQUE Y DEFENSA ---
+# --- PANEL VISUAL DE FUERZAS CALCULADAS ---
+st.markdown("### 📊 Fuerza Relativa de los Equipos (Calculada automáticamente)")
 prom_individual = prom_liga / 2
 
 fuerza_atk_local = cf_local / prom_individual
 fuerza_atk_visita = cf_visita / prom_individual
 fuerza_def_local = cc_local / prom_individual
 fuerza_def_visita = cc_visita / prom_individual
+
+f_col1, f_col2, f_col3, f_col4 = st.columns(4)
+f_col1.metric("Fuerza Ataque Local", f"{fuerza_atk_local:.2f}x", help="Mayor a 1.00 es mejor que la media de la liga")
+f_col2.metric("Fuerza Defensa Local", f"{fuerza_def_local:.2f}x", help="Menor a 1.00 es mejor defendiendo corners")
+f_col3.metric("Fuerza Ataque Visita", f"{fuerza_atk_visita:.2f}x", help="Mayor a 1.00 es mejor que la media de la liga")
+f_col4.metric("Fuerza Defensa Visita", f"{fuerza_def_visita:.2f}x", help="Menor a 1.00 es mejor defendiendo corners")
 
 lambda_local_base = fuerza_atk_local * fuerza_def_visita * prom_individual
 lambda_visita_base = fuerza_atk_visita * fuerza_def_local * prom_individual
@@ -219,15 +226,12 @@ with tab2:
             lambda_total_vivo = lambda_local_ajustado + lambda_visita_ajustado
             
             # Simulación Montecarlo con tasa adaptada
-            resultados_vivo = simular_montecarlo(corners_1t_input, minutes_restantes=minutos_restantes if 'minutos_restantes' in locals() else 45, lambda_total=lambda_total_vivo, n_sim=n_simulaciones)
-            
-            # Corregir llamada interna por comodidad en asignación compacta de parámetros
             resultados_vivo = simular_montecarlo(corners_1t_input, minutos_restantes, lambda_total_vivo, n_simulaciones)
             promedio_proyectado = np.mean(resultados_vivo)
             
             # Cartas de Métricas Principales
             st.subheader("🎯 Resultados de la Proyección en Vivo")
-            st.caption(f"💡 **Fuerzas de Ataque Modificadas:** Local: **{fuerza_atk_local_viva:.2f}** | Visita: **{fuerza_atk_visita_viva:.2f}**")
+            st.caption(f"💡 **Fuerzas de Ataque Modificadas por Urgencia de Gol:** Local: **{fuerza_atk_local_viva:.2f}** | Visita: **{fuerza_atk_visita_viva:.2f}**")
             
             c1, c2, c3 = st.columns(3)
             c1.metric("Corners Reales Registrados", f"{corners_1t_input}")
